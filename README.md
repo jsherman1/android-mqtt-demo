@@ -3,4 +3,4 @@ android-mqtt-demo
 
 Android MQTT Client - Demo
 
-This is a simple client to demonstrate the use fusesource/mqtt-client on Android.
+This is a simple client to demonstrate the use of fusesource/mqtt-client library on Android.
