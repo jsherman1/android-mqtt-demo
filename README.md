@@ -10,9 +10,13 @@ Once you have cloned the repo, you can build the project in eclipse with Android
 To Build the project in eclipse:
 
 1) Select: File -> New -> Android Project
+
 2) Give the project a name
+
 3) Select: Create project from existing source
+
 4) Browse to the location where you cloned the repo
+
 5) Click Finish
 
 Once the project is created you will need to add the mqtt-client lib dependency.
