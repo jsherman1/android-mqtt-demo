@@ -2,7 +2,8 @@ package org.example.mqtt;
 
 import java.net.URISyntaxException;
 
-import org.fusesource.mqtt.client.BlockingConnection;
+import org.fusesource.mqtt.client.Callback;
+import org.fusesource.mqtt.client.FutureConnection;
 import org.fusesource.mqtt.client.MQTT;
 import org.fusesource.mqtt.client.Message;
 import org.fusesource.mqtt.client.QoS;
@@ -11,6 +12,7 @@ import org.fusesource.mqtt.client.Topic;
 import org.example.mqtt.R;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.util.Log;
@@ -24,8 +26,7 @@ public class MQTTActivity extends Activity implements OnClickListener{
 	
 	private final String TAG = "MQTTClient";
 	
-	EditText hostET = null;
-	EditText portET = null;
+	EditText addressET = null;
 	EditText destinationET = null;
 	EditText messageET = null;
 	EditText receiveET = null;
@@ -36,8 +37,9 @@ public class MQTTActivity extends Activity implements OnClickListener{
 	Button disconnectButton = null;
 	Button sendButton = null;
 	
-	String sHost = null;
-	String sPort = null;
+	private ProgressDialog progressDialog = null;
+	
+	String sAddress = null;
 	String sUserName = null;
 	String sPassword = null;
 	String sDestination = null;
@@ -45,7 +47,7 @@ public class MQTTActivity extends Activity implements OnClickListener{
 	
 	MQTT mqtt = null;
 	
-	BlockingConnection connection = null;
+	FutureConnection connection = null;
 	
     /** Called when the activity is first created. */
     @Override
@@ -69,8 +71,8 @@ public class MQTTActivity extends Activity implements OnClickListener{
     	// lock the screen in portrait mode
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
     	
-    	hostET = (EditText)findViewById(R.id.hostEditText);
-    	portET = (EditText)findViewById(R.id.portEditText);
+    	addressET = (EditText)findViewById(R.id.addressEditText);
+    	addressET.setHint("tcp://192.168.1.15:1883");
     	userNameET = (EditText)findViewById(R.id.userNameEditText);
     	passwordET = (EditText)findViewById(R.id.passwordEditText);
     	destinationET = (EditText)findViewById(R.id.destinationEditText);
@@ -90,20 +92,13 @@ public class MQTTActivity extends Activity implements OnClickListener{
 	public void onClick(View v) {
 		if(v == connectButton)
 		{
-			sHost = hostET.getText().toString().trim();
-			sPort = portET.getText().toString().trim();
+			sAddress = addressET.getText().toString().trim();
 			sUserName = userNameET.getText().toString().trim();
 			sPassword = passwordET.getText().toString().trim();
 			
-			Log.d(TAG, "UserName: " + sUserName + " Password: " + sPassword);
-			
-			if(sHost.equals(""))
+			if(sAddress.equals(""))
 			{
-				Toast.makeText(this,"Host must be provided", Toast.LENGTH_LONG).show();
-			}
-			else if (sPort.equals(""))
-			{
-				Toast.makeText(this,"Port must be provided", Toast.LENGTH_LONG).show();
+				Toast.makeText(this,"Address must be provided", Toast.LENGTH_LONG).show();
 			}
 			else
 			{
@@ -133,39 +128,69 @@ public class MQTTActivity extends Activity implements OnClickListener{
 		}
 	}
 	
+	// callback used for Future
+	<T> Callback<T> onui(final Callback<T> original) {
+		return new Callback<T>() {
+			public void onSuccess(final T value) {
+				runOnUiThread(new Runnable(){
+					public void run() {
+						original.onSuccess(value);
+					}
+				});
+			}
+			public void onFailure(final Throwable error) {
+				runOnUiThread(new Runnable(){
+					public void run() {
+						original.onFailure(error);
+					}
+				});
+			}
+		};
+	}
+	
 	private void connect()
 	{
 		mqtt = new MQTT();
+		mqtt.setClientId("android-mqtt-example");
 
 		try
 		{
-			mqtt.setHost("tcp://" + sHost + ":" + Integer.parseInt(sPort));
-			
-			if(sUserName != null || !sUserName.equals(""))
-			{
-				mqtt.setUserName(sUserName);
-				Log.d(TAG, "UserName set: " + sUserName);
-			}
-			
-			if(sPassword != null || !sPassword.equals(""))
-			{
-				mqtt.setPassword(sPassword);
-				Log.d(TAG, "Password set: " + sPassword);
-			}
-			
-			connection = mqtt.blockingConnection();
-			connection.connect();
-			connectButton.setEnabled(false);
-			Toast.makeText(this,"Connected", Toast.LENGTH_LONG).show();
+			mqtt.setHost(sAddress);
+			Log.d(TAG, "Address set: " + sAddress);
 		}
 		catch(URISyntaxException urise)
 		{
-			Log.e(TAG, "URISyntaxException connecting to " + sHost + ":" + sPort + " - " + urise);
+			Log.e(TAG, "URISyntaxException connecting to " + sAddress + " - " + urise);
 		}
-		catch(Exception e)
+		
+		if(sUserName != null && !sUserName.equals(""))
 		{
-			Log.e(TAG, "Exception connecting to " + sHost + ":" + sPort + " - " + e);
+			mqtt.setUserName(sUserName);
+			Log.d(TAG, "UserName set: [" + sUserName + "]");
 		}
+		
+		if(sPassword != null && !sPassword.equals(""))
+		{
+			mqtt.setPassword(sPassword);
+			Log.d(TAG, "Password set: [" + sPassword + "]");
+		}
+		
+		connection = mqtt.futureConnection();
+		progressDialog = ProgressDialog.show(this, "", 
+                "Connecting...", true);
+		connection.connect().then(onui(new Callback<Void>(){
+			public void onSuccess(Void value) {
+				connectButton.setEnabled(false);
+				progressDialog.dismiss();
+				Toast.makeText(MQTTActivity.this,"Connected", Toast.LENGTH_SHORT).show();
+			}
+			public void onFailure(Throwable e) {
+				Toast.makeText(MQTTActivity.this,"Problem connecting to host", Toast.LENGTH_LONG).show();
+				Log.e(TAG, "Exception connecting to " + sAddress + " - " + e);
+				progressDialog.dismiss();
+			}
+		}));
+
 	}
 	
 	private void disconnect()
@@ -175,8 +200,16 @@ public class MQTTActivity extends Activity implements OnClickListener{
 		{
 			if(connection != null && connection.isConnected())
 			{
-				connection.disconnect();
-				Toast.makeText(this,"Disconnected", Toast.LENGTH_LONG).show();;
+				connection.disconnect().then(onui(new Callback<Void>(){
+					public void onSuccess(Void value) {
+						connectButton.setEnabled(true);
+						Toast.makeText(MQTTActivity.this, "Disconnected", Toast.LENGTH_SHORT).show();
+					}
+					public void onFailure(Throwable e) {
+						Toast.makeText(MQTTActivity.this,"Problem disconnecting", Toast.LENGTH_LONG).show();
+						Log.e(TAG, "Exception disconnecting from " + sAddress + " - " + e);
+					}
+				}));
 			}
 			else
 			{
@@ -191,36 +224,45 @@ public class MQTTActivity extends Activity implements OnClickListener{
 	
 	private void send()
 	{
-		try
+		if(!connection.isConnected())
 		{
-			if(!connection.isConnected())
-			{
-				connect();
+			connect();
+		}
+		
+		Topic[] topics = {new Topic(sDestination, QoS.AT_LEAST_ONCE)};
+		connection.subscribe(topics).then(onui(new Callback<byte[]>() {
+			public void onSuccess(byte[] subscription) {
+				
+				Log.d(TAG, "Destination: " + sDestination);
+				Log.d(TAG, "Message: " + sMessage);
+				
+				// publish message
+				connection.publish(sDestination, sMessage.getBytes(), QoS.AT_LEAST_ONCE, false);
+				destinationET.setText("");
+				messageET.setText("");
+				Toast.makeText(MQTTActivity.this,"Message sent", Toast.LENGTH_LONG).show();
+				
+				// receive message
+				connection.receive().then(onui(new Callback<Message>() {
+					public void onSuccess(Message message) {
+						String receivedMesageTopic = message.getTopic();
+						byte[] payload = message.getPayload();
+						String messagePayLoad = new String(payload);
+						message.ack();
+						connection.unsubscribe(new String[]{sDestination});
+						receiveET.setText(receivedMesageTopic + ":" + messagePayLoad);
+					}
+					
+					public void onFailure(Throwable e) {
+						Log.e(TAG, "Exception receiving message: " + e);
+					}
+				}));
+				
 			}
 			
-			// setup receiver
-			Topic[] topics = {new Topic(sDestination, QoS.AT_LEAST_ONCE)};
-			byte[] subscription = connection.subscribe(topics);
-			
-			// publish message
-			connection.publish(sDestination, sMessage.getBytes(), QoS.AT_LEAST_ONCE, false);
-			destinationET.setText("");
-			messageET.setText("");
-			Toast.makeText(this,"Message sent", Toast.LENGTH_LONG).show();
-			
-			// receive message
-			Message message = connection.receive();
-			String receivedMesageTopic = message.getTopic();
-			byte[] payload = message.getPayload();
-			String messagePayLoad = new String(payload);
-			message.ack();
-			connection.unsubscribe(new String[]{sDestination});
-			
-			receiveET.setText(receivedMesageTopic + ":" + messagePayLoad);
-		}
-		catch(Exception e)
-		{
-			Log.e(TAG, "Exception sending message: " + e);
-		}
+			public void onFailure(Throwable e) {
+				Log.e(TAG, "Exception sending message: " + e);
+			}
+		}));
 	}
 }
