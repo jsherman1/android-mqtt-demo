@@ -98,7 +98,7 @@ public class MQTTActivity extends Activity implements OnClickListener{
 			
 			if(sAddress.equals(""))
 			{
-				Toast.makeText(this,"Address must be provided", Toast.LENGTH_LONG).show();
+				toast("Address must be provided");
 			}
 			else
 			{
@@ -119,7 +119,7 @@ public class MQTTActivity extends Activity implements OnClickListener{
 			// allow empty messages
 			if(sDestination.equals(""))
 			{
-				Toast.makeText(this,"Destination must be provided", Toast.LENGTH_LONG).show();
+				toast("Destination must be provided");
 			}
 			else
 			{
@@ -182,10 +182,10 @@ public class MQTTActivity extends Activity implements OnClickListener{
 			public void onSuccess(Void value) {
 				connectButton.setEnabled(false);
 				progressDialog.dismiss();
-				Toast.makeText(MQTTActivity.this,"Connected", Toast.LENGTH_SHORT).show();
+				toast("Connected");
 			}
 			public void onFailure(Throwable e) {
-				Toast.makeText(MQTTActivity.this,"Problem connecting to host", Toast.LENGTH_LONG).show();
+				toast("Problem connecting to host");
 				Log.e(TAG, "Exception connecting to " + sAddress + " - " + e);
 				progressDialog.dismiss();
 			}
@@ -203,17 +203,17 @@ public class MQTTActivity extends Activity implements OnClickListener{
 				connection.disconnect().then(onui(new Callback<Void>(){
 					public void onSuccess(Void value) {
 						connectButton.setEnabled(true);
-						Toast.makeText(MQTTActivity.this, "Disconnected", Toast.LENGTH_SHORT).show();
+						toast("Disconnected");
 					}
 					public void onFailure(Throwable e) {
-						Toast.makeText(MQTTActivity.this,"Problem disconnecting", Toast.LENGTH_LONG).show();
+						toast("Problem disconnecting");
 						Log.e(TAG, "Exception disconnecting from " + sAddress + " - " + e);
 					}
 				}));
 			}
 			else
 			{
-				Toast.makeText(this,"Not Connected", Toast.LENGTH_SHORT).show();
+				toast("Not Connected");
 			}
 		}
 		catch(Exception e)
@@ -224,45 +224,58 @@ public class MQTTActivity extends Activity implements OnClickListener{
 	
 	private void send()
 	{
-		if(!connection.isConnected())
+		if(connection != null)
 		{
-			connect();
-		}
-		
-		Topic[] topics = {new Topic(sDestination, QoS.AT_LEAST_ONCE)};
-		connection.subscribe(topics).then(onui(new Callback<byte[]>() {
-			public void onSuccess(byte[] subscription) {
-				
-				Log.d(TAG, "Destination: " + sDestination);
-				Log.d(TAG, "Message: " + sMessage);
-				
-				// publish message
-				connection.publish(sDestination, sMessage.getBytes(), QoS.AT_LEAST_ONCE, false);
-				destinationET.setText("");
-				messageET.setText("");
-				Toast.makeText(MQTTActivity.this,"Message sent", Toast.LENGTH_LONG).show();
-				
-				// receive message
-				connection.receive().then(onui(new Callback<Message>() {
-					public void onSuccess(Message message) {
-						String receivedMesageTopic = message.getTopic();
-						byte[] payload = message.getPayload();
-						String messagePayLoad = new String(payload);
-						message.ack();
-						connection.unsubscribe(new String[]{sDestination});
-						receiveET.setText(receivedMesageTopic + ":" + messagePayLoad);
-					}
-					
-					public void onFailure(Throwable e) {
-						Log.e(TAG, "Exception receiving message: " + e);
-					}
-				}));
-				
+			// automatically connect if no longer connected
+			if(!connection.isConnected())
+			{
+				connect();
 			}
 			
-			public void onFailure(Throwable e) {
-				Log.e(TAG, "Exception sending message: " + e);
-			}
-		}));
+			Topic[] topics = {new Topic(sDestination, QoS.AT_LEAST_ONCE)};
+			connection.subscribe(topics).then(onui(new Callback<byte[]>() {
+				public void onSuccess(byte[] subscription) {
+					
+					Log.d(TAG, "Destination: " + sDestination);
+					Log.d(TAG, "Message: " + sMessage);
+					
+					// publish message
+					connection.publish(sDestination, sMessage.getBytes(), QoS.AT_LEAST_ONCE, false);
+					destinationET.setText("");
+					messageET.setText("");
+					toast("Message sent");
+					
+					// receive message
+					connection.receive().then(onui(new Callback<Message>() {
+						public void onSuccess(Message message) {
+							String receivedMesageTopic = message.getTopic();
+							byte[] payload = message.getPayload();
+							String messagePayLoad = new String(payload);
+							message.ack();
+							connection.unsubscribe(new String[]{sDestination});
+							receiveET.setText(receivedMesageTopic + ":" + messagePayLoad);
+						}
+						
+						public void onFailure(Throwable e) {
+							Log.e(TAG, "Exception receiving message: " + e);
+						}
+					}));
+					
+				}
+				
+				public void onFailure(Throwable e) {
+					Log.e(TAG, "Exception sending message: " + e);
+				}
+			}));
+		}
+		else
+		{
+			toast("No connection has been made, please create the connection");
+		}
+	}
+	
+	private void toast(String message)
+	{
+		Toast.makeText(this, message, Toast.LENGTH_LONG).show();
 	}
 }
