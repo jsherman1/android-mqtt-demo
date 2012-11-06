@@ -14,3 +14,19 @@ gen/
 
 # Local configuration file (sdk path, etc)
 local.properties
+
+# IntelliJ
+*.iws
+*.ipr
+*.iml
+
+# These dependencies should be resolved in other way, probably through maven.
+# If you're not using maven for your Android project
+# - clone https://github.com/fusesource/mqtt-client
+# - run `mvn install`
+# - copy the files from the ~/.m2/repository/ directory
+libs/hawtbuf-1.9.jar
+libs/hawtdispatch-1.12.jar
+libs/hawtdispatch-transport-1.12.jar
+libs/mqtt-client-1.5-SNAPSHOT.jar
+

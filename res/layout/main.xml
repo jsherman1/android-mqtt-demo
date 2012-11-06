@@ -1,136 +1,116 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:orientation="vertical" >
+<ScrollView
+        xmlns:android="http://schemas.android.com/apk/res/android"
 
-    <ScrollView
         android:id="@+id/scrollView1"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" >
+        android:layout_height="wrap_content">
 
-        <LinearLayout
+    <LinearLayout
             android:id="@+id/linearLayout1"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" android:orientation="vertical">
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="10dp">
 
-            <LinearLayout
-                android:id="@+id/linearLayout3"
+        <TableLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" >
+                android:layout_height="wrap_content">
 
+            <TableRow>
                 <TextView
-                    android:id="@+id/textView1"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Address:"
-                    android:textAppearance="?android:attr/textAppearanceMedium" />
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Address:"
+                        android:textAppearance="?android:attr/textAppearanceMedium"/>
 
+                <Spinner
+                        android:id="@+id/spnProtocol"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        />
                 <EditText
-                    android:id="@+id/addressEditText"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:lines="1" >
-
-                    <requestFocus />
+                        android:id="@+id/addressEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:lines="1"
+                        android:inputType="text|textNoSuggestions">
+                    <requestFocus/>
                 </EditText>
+            </TableRow>
+            <TableRow>
+                <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="User Name:"
+                        android:textAppearance="?android:attr/textAppearanceMedium"/>
 
-            </LinearLayout>
+                <EditText
+                        android:id="@+id/userNameEditText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:inputType="text|textNoSuggestions"/>
+            </TableRow>
+            <TableRow>
+                <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Password:"
+                        android:textAppearance="?android:attr/textAppearanceMedium"/>
 
-            <LinearLayout
-                android:id="@+id/linearLayout4"
+                <EditText
+                        android:id="@+id/passwordEditText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:inputType="textPassword"/>
+            </TableRow>
+        </TableLayout>
+        <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal" >
+                android:orientation="horizontal">
 
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/linearLayout5"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" >
-
-                <TextView
-                    android:id="@+id/textView6"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="User Name:"
-                    android:textAppearance="?android:attr/textAppearanceMedium" />
-
-                <EditText
-                    android:id="@+id/userNameEditText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1" />
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/linearLayout6"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" >
-
-                <TextView
-                    android:id="@+id/textView7"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Password:"
-                    android:textAppearance="?android:attr/textAppearanceMedium" />
-
-                <EditText
-                    android:id="@+id/passwordEditText"
+            <Button android:id="@+id/btnConnect"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:inputType="textPassword" />
+                    android:text="Connect"
+                    android:onClick="doConnect"
+                    />
 
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/linearLayout2"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal" >
-
-                <Button
-                    android:id="@+id/connectButton"
-                    android:layout_width="wrap_content"
+            <Button android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Connect" />
+                    android:text="Disconnect"
+                    android:onClick="doDisconnect"
+                    />
+        </LinearLayout>
 
-                <Button
-                    android:id="@+id/disconnectButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Disconnect" android:layout_weight="1"/>
-
-            </LinearLayout>
-
-            <TextView
-                android:id="@+id/textView3"
+        <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="Destination:"
-                android:textAppearance="?android:attr/textAppearanceMedium" />
+                android:textAppearance="?android:attr/textAppearanceMedium"/>
 
-            <EditText
+        <EditText
                 android:id="@+id/destinationEditText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1" />
+                android:layout_weight="1"/>
 
-            <TextView
+        <TextView
                 android:id="@+id/textView4"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="Message:"
-                android:textAppearance="?android:attr/textAppearanceMedium" />
+                android:textAppearance="?android:attr/textAppearanceMedium"/>
 
-            <EditText
+        <EditText
                 android:id="@+id/messageEditText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -138,28 +118,25 @@
                 android:inputType="textMultiLine"
                 android:lines="2"/>
 
-            <Button
-                android:id="@+id/sendButton"
-                android:layout_width="fill_parent"
+        <Button android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Send" />
+                android:text="Send"
+                android:onClick="doSend"
+                />
 
-            <TextView
-                android:id="@+id/textView5"
+        <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Received:"
-                android:textAppearance="?android:attr/textAppearanceMedium" />
+                android:textAppearance="?android:attr/textAppearanceMedium"/>
 
-            <EditText
+        <EditText
                 android:id="@+id/receiveEditText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="none|textMultiLine"
-                android:lines="2" />
+                android:lines="2"/>
 
-        </LinearLayout>
-    </ScrollView>
-
-</LinearLayout>
+    </LinearLayout>
+</ScrollView>
